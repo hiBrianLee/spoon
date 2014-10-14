@@ -387,6 +387,9 @@ public final class SpoonRunner {
     @Parameter(names = { "--debug" }, hidden = true)
     public boolean debug;
 
+    @Parameter(names = { "--serial" }, description = "Device serial to target one device")
+    public String serial;
+
     @Parameter(names = { "-h", "--help" }, description = "Command help", help = true, hidden = true)
     public boolean help;
   }
@@ -434,7 +437,7 @@ public final class SpoonRunner {
       return;
     }
 
-    SpoonRunner spoonRunner = new SpoonRunner.Builder() //
+    SpoonRunner.Builder builder = new SpoonRunner.Builder() //
         .setTitle(parsedArgs.title)
         .setApplicationApk(parsedArgs.apk)
         .setInstrumentationApk(parsedArgs.testApk)
@@ -446,9 +449,14 @@ public final class SpoonRunner {
         .setAdbTimeout(parsedArgs.adbTimeoutSeconds * 1000)
         .setFailIfNoDeviceConnected(parsedArgs.failIfNoDeviceConnected)
         .setClassName(parsedArgs.className)
-        .setMethodName(parsedArgs.methodName)
-        .useAllAttachedDevices()
-        .build();
+        .setMethodName(parsedArgs.methodName);
+
+    if (parsedArgs.serial == null || parsedArgs.serial.isEmpty()) {
+      builder.useAllAttachedDevices();
+    } else {
+      builder.addDevice(parsedArgs.serial);
+    }
+    SpoonRunner spoonRunner = builder.build();
 
     if (!spoonRunner.run() && parsedArgs.failOnFailure) {
       System.exit(1);
